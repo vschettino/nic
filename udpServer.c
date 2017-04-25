@@ -56,7 +56,10 @@ int main(int argc, char *argv[]) {
       printf("%s: cannot receive data \n",argv[0]);
       continue;
     }
-
+    if (strncmp(msg, "quit", 5) == 0){
+      printf("saindo da aplicação\n");
+      return 0;
+    }
     /* print received message */
     printf("%s: from %s:UDP%u : %s \n",
 	   argv[0],inet_ntoa(cliAddr.sin_addr),
