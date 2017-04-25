@@ -78,13 +78,14 @@ int main(int argc, char *argv[]) {
   int sd, rc, i;
   struct sockaddr_in cliAddr, remoteServAddr;
   struct hostent *h;
-
+  char data[10];
   /* check command line args */
-  if(argc<3) {
-    printf("usage : %s <server> <data1> ... <dataN> \n", argv[0]);
+  if(argc<2) {
+    printf("usage : %s <server> \n", argv[0]);
     exit(1);
   }
-
+  while(1){
+  scanf("%s",&data);
   /* get server IP address (no check if input is IP address or DNS name */
   h = gethostbyname(argv[1]);
   if(h==NULL) {
@@ -117,26 +118,24 @@ int main(int argc, char *argv[]) {
 
 
   /* send data */
-  for(i=2;i<argc;i++) {
-    rc = sendto(sd, argv[i], strlen(argv[i])+1, 0,
+    rc = sendto(sd, data, strlen(data)+1, 0,
 		(struct sockaddr *) &remoteServAddr,
 		sizeof(remoteServAddr));
     if(rc<0) {
-      printf("%s: cannot send data %d \n",argv[0],i-1);
+      printf("%s: cannot send '%s' \n",argv[0], data);
       close(sd);
       exit(1);
     }
-    printf("%s: sent '%s' to '%s' (IP : %s) \n", argv[0],argv[i], h->h_name,
+    printf("%s: sent '%s' to '%s' (IP : %s) \n", argv[0],data, h->h_name,
      inet_ntoa(*(struct in_addr *)h->h_addr_list[0]));
-
-
-    waitForACK();
-  }
-
-  return 1;
-
+     waitForACK();
+     if(strncmp(data, "bye",3) == 0){
+       printf("envio terminado! Bye\n");
+       return 1;
+     }
 }
 
+}
 /*
 
 ./udpClient localhost Hello World
