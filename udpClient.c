@@ -14,7 +14,64 @@
 
 #define REMOTE_SERVER_PORT 2017
 #define MAX_MSG 100
+#define LOCAL_SERVER_PORT 2018
 
+int waitForACK(){
+  int sd, rc, n, cliLen;
+  struct sockaddr_in cliAddr, servAddr;
+  char msg[MAX_MSG];
+
+  /* socket creation */
+  sd=socket(AF_INET, SOCK_DGRAM, 0);
+  if(sd<0) {
+    printf("waitForAck: cannot open socket \n");
+    exit(1);
+  }
+
+  /* bind local server port */
+  servAddr.sin_family = AF_INET;
+  servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  servAddr.sin_port = htons(LOCAL_SERVER_PORT);
+  rc = bind (sd, (struct sockaddr *) &servAddr,sizeof(servAddr));
+  if(rc<0) {
+    printf("waitForAck: cannot bind port number %d \n",
+     LOCAL_SERVER_PORT);
+    exit(1);
+  }
+
+  printf("waiting the ACK...\n");
+
+  /* server infinite loop */
+  while(1) {
+
+    /* init buffer */
+    memset(msg,0x0,MAX_MSG);
+
+
+    /* receive message */
+    cliLen = sizeof(cliAddr);
+    n = recvfrom(sd, msg, MAX_MSG, 0,
+     (struct sockaddr *) &cliAddr, &cliLen);
+
+    if(n<0) {
+      printf("waitForAck: cannot receive data \n");
+      continue;
+    }
+    if (strncmp(msg, "ACK", 3) == 0){
+      printf("ACK recebido!\n");
+      close(sd);
+      return 0;
+    }
+    /* print received message */
+    printf("waitForAck: from %s:UDP%u : %s \n",
+     inet_ntoa(cliAddr.sin_addr),
+     ntohs(cliAddr.sin_port),msg);
+
+  }/* end of server infinite loop */
+
+return 0;
+shutdown(sd, 2);
+}
 
 int main(int argc, char *argv[]) {
 
@@ -34,9 +91,6 @@ int main(int argc, char *argv[]) {
     printf("%s: unknown host '%s' \n", argv[0], argv[1]);
     exit(1);
   }
-
-  printf("%s: sending data to '%s' (IP : %s) \n", argv[0], h->h_name,
-	 inet_ntoa(*(struct in_addr *)h->h_addr_list[0]));
 
   remoteServAddr.sin_family = h->h_addrtype;
   memcpy((char *) &remoteServAddr.sin_addr.s_addr,
@@ -67,13 +121,16 @@ int main(int argc, char *argv[]) {
     rc = sendto(sd, argv[i], strlen(argv[i])+1, 0,
 		(struct sockaddr *) &remoteServAddr,
 		sizeof(remoteServAddr));
-
     if(rc<0) {
       printf("%s: cannot send data %d \n",argv[0],i-1);
       close(sd);
       exit(1);
     }
+    printf("%s: sent '%s' to '%s' (IP : %s) \n", argv[0],argv[i], h->h_name,
+     inet_ntoa(*(struct in_addr *)h->h_addr_list[0]));
 
+
+    waitForACK();
   }
 
   return 1;

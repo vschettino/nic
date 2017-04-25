@@ -12,7 +12,59 @@
 
 #define LOCAL_SERVER_PORT 2017
 #define MAX_MSG 100
+#define REMOTE_SERVER_PORT 2018
+int sendACK(){
 
+  int sdACK, rc, i;
+  struct sockaddr_in cliAddr, remoteServAddr;
+  struct hostent *h;
+
+  h = gethostbyname("localhost");
+  if(h==NULL) {
+    printf("unknown host");
+    exit(1);
+  }
+
+  printf("sending ACK '%s' (IP : %s) \n", h->h_name,
+   inet_ntoa(*(struct in_addr *)h->h_addr_list[0]));
+
+  remoteServAddr.sin_family = h->h_addrtype;
+  memcpy((char *) &remoteServAddr.sin_addr.s_addr,
+   h->h_addr_list[0], h->h_length);
+  remoteServAddr.sin_port = htons(REMOTE_SERVER_PORT);
+
+  /* socket creation */
+  sdACK = socket(AF_INET,SOCK_DGRAM,0);
+  if(sdACK<0) {
+    printf("cannot open socket \n");
+    exit(1);
+  }
+
+  /* bind any port */
+  cliAddr.sin_family = AF_INET;
+  cliAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  cliAddr.sin_port = htons(0);
+
+  rc = bind(sdACK, (struct sockaddr *) &cliAddr, sizeof(cliAddr));
+  if(rc<0) {
+    printf("cannot bind port\n");
+    exit(1);
+  }
+
+
+  /* send data */
+    rc = sendto(sdACK, "ACK", 3, 0,
+    (struct sockaddr *) &remoteServAddr,
+    sizeof(remoteServAddr));
+
+    if(rc<0) {
+      printf("cannot send ACK\n");
+      close(sdACK);
+      exit(1);
+    }
+
+
+}
 int main(int argc, char *argv[]) {
 
   int sd, rc, n, cliLen;
@@ -56,6 +108,7 @@ int main(int argc, char *argv[]) {
       printf("%s: cannot receive data \n",argv[0]);
       continue;
     }
+    sendACK();
     if (strncmp(msg, "quit", 5) == 0){
       printf("saindo da aplicação\n");
       return 0;
