@@ -10,11 +10,11 @@
 #include <unistd.h> /* close() */
 #include <string.h> /* memset() */
 
-#define LOCAL_SERVER_PORT 1500
+#define LOCAL_SERVER_PORT 2017
 #define MAX_MSG 100
 
 int main(int argc, char *argv[]) {
-  
+
   int sd, rc, n, cliLen;
   struct sockaddr_in cliAddr, servAddr;
   char msg[MAX_MSG];
@@ -32,36 +32,36 @@ int main(int argc, char *argv[]) {
   servAddr.sin_port = htons(LOCAL_SERVER_PORT);
   rc = bind (sd, (struct sockaddr *) &servAddr,sizeof(servAddr));
   if(rc<0) {
-    printf("%s: cannot bind port number %d \n", 
+    printf("%s: cannot bind port number %d \n",
 	   argv[0], LOCAL_SERVER_PORT);
     exit(1);
   }
 
-  printf("%s: waiting for data on port UDP %u\n", 
+  printf("%s: waiting for data on port UDP %u\n",
 	   argv[0],LOCAL_SERVER_PORT);
 
   /* server infinite loop */
   while(1) {
-    
+
     /* init buffer */
     memset(msg,0x0,MAX_MSG);
 
 
     /* receive message */
     cliLen = sizeof(cliAddr);
-    n = recvfrom(sd, msg, MAX_MSG, 0, 
+    n = recvfrom(sd, msg, MAX_MSG, 0,
 		 (struct sockaddr *) &cliAddr, &cliLen);
 
     if(n<0) {
       printf("%s: cannot receive data \n",argv[0]);
       continue;
     }
-      
+
     /* print received message */
-    printf("%s: from %s:UDP%u : %s \n", 
+    printf("%s: from %s:UDP%u : %s \n",
 	   argv[0],inet_ntoa(cliAddr.sin_addr),
 	   ntohs(cliAddr.sin_port),msg);
-    
+
   }/* end of server infinite loop */
 
 return 0;

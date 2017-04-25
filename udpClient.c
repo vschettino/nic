@@ -10,14 +10,14 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h> /* memset() */
-#include <sys/time.h> /* select() */ 
+#include <sys/time.h> /* select() */
 
-#define REMOTE_SERVER_PORT 1500
+#define REMOTE_SERVER_PORT 2017
 #define MAX_MSG 100
 
 
 int main(int argc, char *argv[]) {
-  
+
   int sd, rc, i;
   struct sockaddr_in cliAddr, remoteServAddr;
   struct hostent *h;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	 inet_ntoa(*(struct in_addr *)h->h_addr_list[0]));
 
   remoteServAddr.sin_family = h->h_addrtype;
-  memcpy((char *) &remoteServAddr.sin_addr.s_addr, 
+  memcpy((char *) &remoteServAddr.sin_addr.s_addr,
 	 h->h_addr_list[0], h->h_length);
   remoteServAddr.sin_port = htons(REMOTE_SERVER_PORT);
 
@@ -49,12 +49,12 @@ int main(int argc, char *argv[]) {
     printf("%s: cannot open socket \n",argv[0]);
     exit(1);
   }
-  
+
   /* bind any port */
   cliAddr.sin_family = AF_INET;
   cliAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   cliAddr.sin_port = htons(0);
-  
+
   rc = bind(sd, (struct sockaddr *) &cliAddr, sizeof(cliAddr));
   if(rc<0) {
     printf("%s: cannot bind port\n", argv[0]);
@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
 
   /* send data */
   for(i=2;i<argc;i++) {
-    rc = sendto(sd, argv[i], strlen(argv[i])+1, 0, 
-		(struct sockaddr *) &remoteServAddr, 
+    rc = sendto(sd, argv[i], strlen(argv[i])+1, 0,
+		(struct sockaddr *) &remoteServAddr,
 		sizeof(remoteServAddr));
 
     if(rc<0) {
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     }
 
   }
-  
+
   return 1;
 
 }
